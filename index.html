@@ -3,10 +3,45 @@
 <head>
   <meta charset="UTF-8" />
   <title>JS Drum Kit</title>
-  <link rel="stylesheet" href="style.css" />
   <link rel="icon" href="https://fav.farm/🔥" />
   <style>
-    /* إخفاء حقل الإدخال */
+    /* ستايل الصفحة */
+    html {
+      font-size: 10px;
+      background: url('./background.jpg') bottom center;
+      background-size: cover;
+    }
+
+    body, html {
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
+      color: white;
+      text-align: center;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      background-color: #222;
+    }
+
+    #startBtn {
+      font-size: 1.8rem;
+      padding: 1rem 2rem;
+      margin-bottom: 2rem;
+      border: none;
+      border-radius: 0.5rem;
+      background-color: purple;
+      color: white;
+      cursor: pointer;
+      user-select: none;
+      box-shadow: 0 0 1rem purple;
+      transition: background-color 0.3s ease;
+    }
+    #startBtn:hover {
+      background-color: darkmagenta;
+    }
+
     #keyboardInput {
       position: absolute;
       left: -9999px;
@@ -14,12 +49,52 @@
       height: 0;
       width: 0;
     }
+
+    .keys {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      min-height: 40vh;
+    }
+
+    .key {
+      border: .4rem solid black;
+      border-radius: .5rem;
+      margin: 1rem;
+      font-size: 1.5rem;
+      padding: 1rem .5rem;
+      transition: all .07s ease;
+      width: 10rem;
+      text-align: center;
+      color: white;
+      background: rgba(0,0,0,0.4);
+      text-shadow: 0 0 .5rem black;
+      user-select: none;
+    }
+
+    .playing {
+      transform: scale(1.1);
+      border-color: purple;
+      box-shadow: 0 0 1rem purple;
+    }
+
+    kbd {
+      display: block;
+      font-size: 4rem;
+    }
+
+    .sound {
+      font-size: 1.2rem;
+      text-transform: uppercase;
+      letter-spacing: .1rem;
+      color: white;
+    }
   </style>
 </head>
 <body>
 
-  <!-- حقل الإدخال المخفي لفتح كيبورد الموبايل -->
-  <input id="keyboardInput" type="text" autofocus autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+  <button id="startBtn">اضغط هنا لبدء التفاعل</button>
+  <input id="keyboardInput" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
 
   <div class="keys">
     <div data-key="65" class="key">
@@ -71,20 +146,29 @@
   <audio data-key="76" src="sounds/tink.wav"></audio>
 
 <script>
+  const startBtn = document.getElementById('startBtn');
   const input = document.getElementById('keyboardInput');
 
-  // تفعيل الأصوات عند أول تفاعل لمتصفحات الموبايل
-  window.addEventListener('touchstart', () => {
-    const audioElements = document.querySelectorAll('audio');
-    audioElements.forEach(audio => {
+  let isStarted = false;
+
+  startBtn.addEventListener('click', () => {
+    if (isStarted) return;
+    isStarted = true;
+
+    // تفعيل الصوت مؤقتًا للسماح بالتشغيل لاحقًا
+    document.querySelectorAll('audio').forEach(audio => {
       audio.play().then(() => audio.pause());
     });
-  }, { once: true });
 
-  function removeTransition(e) {
-    if (e.propertyName !== 'transform') return;
-    e.target.classList.remove('playing');
-  }
+    // إخفاء الزر وإظهار حقل الإدخال وتركيزه لإظهار الكيبورد
+    startBtn.style.display = 'none';
+    input.style.left = '10px';
+    input.style.opacity = '1';
+    input.focus();
+
+    // ربط حدث الضغط على الحروف لتشغيل الصوت
+    input.addEventListener('keydown', playSound);
+  });
 
   function playSound(e) {
     const keyCode = e.keyCode || e.which;
@@ -97,15 +181,12 @@
     audio.play();
   }
 
+  // إزالة تأثير الانتقال بعد انتهائه
   const keys = Array.from(document.querySelectorAll('.key'));
-  keys.forEach(key => key.addEventListener('transitionend', removeTransition));
-
-  // استماع للكيبورد فقط على حقل الإدخال (مهم للموبايل)
-  input.addEventListener('keydown', playSound);
-
-  // اجعل الحقل دائماً مركزًا حتى لا يختفي الكيبورد
-  input.focus();
-  input.addEventListener('blur', () => input.focus());
+  keys.forEach(key => key.addEventListener('transitionend', e => {
+    if (e.propertyName !== 'transform') return;
+    e.target.classList.remove('playing');
+  }));
 </script>
 
 </body>
